@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large training artifacts
+# Model weights
+*.pt
+*.pth
+
+# Training results and history
+*.csv
+*.json
+
+# Plots and images
+*.png
+*.jpg
+*.jpeg
+
+# Results directories (keep structure, ignore contents)
+reinforce_results/*
+ppo_results/*
+checkpoints/*
+
+# But keep .gitkeep to maintain directory structure
+!reinforce_results/.gitkeep
+!ppo_results/.gitkeep
+!checkpoints/.gitkeep
+
+# Conda/pip
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
+
+# Local environment variables
+.env
+.env.local

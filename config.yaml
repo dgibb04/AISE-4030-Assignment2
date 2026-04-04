@@ -1,0 +1,44 @@
+# AISE 4030 Assignment 02: Policy Gradient Methods Configuration
+# Select agent type and set hyperparameters
+
+agent_type: "ppo"  # Options: "reinforce", "ppo"
+
+environment:
+  name: "BipedalWalker-v3"
+  seed: 42
+  max_steps: 1600  # Maximum steps per episode
+
+shared:
+  gamma: 0.99
+  hidden_sizes: [64, 64]
+  activation: "tanh"
+  max_grad_norm: 0.5
+  device: "cuda"  # Options: "cpu", "cuda"
+
+reinforce:
+  policy_lr: 0.0003
+  value_lr: 0.001
+  max_episodes: 3000
+  render: false
+  eval_interval: 100
+  eval_episodes: 5
+
+ppo:
+  lr: 0.0003
+  rollout_length: 2048
+  mini_batch_size: 64
+  epochs: 10
+  clip_epsilon: 0.2
+  gae_lambda: 0.95
+  value_loss_coef: 0.5
+  entropy_coef: 0.01
+  entropy_decay: 0.9995  # Decay per rollout (very slow over 2000 episodes)
+  max_episodes: 2000
+  render: false
+  eval_interval: 100
+  eval_episodes: 5
+
+training:
+  save_interval: 100
+  log_interval: 10
+  checkpoint_dir: "checkpoints"
