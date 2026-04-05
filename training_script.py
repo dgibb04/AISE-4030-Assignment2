@@ -35,8 +35,6 @@ def train_reinforce(config: dict, env, agent, result_dir: str):
     episode_rewards = []
     policy_losses = []
     value_losses = []
-    entropy_losses = []
-    entropy_coefs = []
 
     print(f"Training REINFORCE for {max_episodes} episodes...")
 
@@ -64,11 +62,9 @@ def train_reinforce(config: dict, env, agent, result_dir: str):
         # Update policy
         losses = agent.update()
         episode_rewards.append(episode_reward)
-        entropy_coefs.append(agent.entropy_coef)
         if losses:
             policy_losses.append(losses["policy_loss"])
             value_losses.append(losses["value_loss"])
-            entropy_losses.append(losses["entropy_loss"])
 
         # Logging
         if (episode + 1) % config["training"]["log_interval"] == 0:
@@ -98,22 +94,12 @@ def train_reinforce(config: dict, env, agent, result_dir: str):
     agent.save_model(os.path.join(result_dir, "final_model"))
     utils.save_training_history(
         np.array(episode_rewards),
-        {
-            "policy_loss": np.array(policy_losses),
-            "value_loss": np.array(value_losses),
-            "entropy_loss": np.array(entropy_losses),
-            "entropy_coef": np.array(entropy_coefs),
-        },
+        {"policy_loss": np.array(policy_losses), "value_loss": np.array(value_losses)},
         result_dir,
     )
     utils.plot_training_curves(
         np.array(episode_rewards),
-        {
-            "policy_loss": np.array(policy_losses),
-            "value_loss": np.array(value_losses),
-            "entropy_loss": np.array(entropy_losses),
-            "entropy_coef": np.array(entropy_coefs),
-        },
+        {"policy_loss": np.array(policy_losses), "value_loss": np.array(value_losses)},
         "REINFORCE",
         save_path=os.path.join(result_dir, "training_curves.png"),
     )
@@ -333,8 +319,6 @@ def main():
             hidden_sizes=config["shared"]["hidden_sizes"],
             activation=config["shared"]["activation"],
             max_grad_norm=config["shared"]["max_grad_norm"],
-            entropy_coef=config["reinforce"].get("entropy_coef", 0.01),
-            entropy_decay=config["reinforce"].get("entropy_decay", 0.9995),
             device=device,
         )
         rewards = train_reinforce(config, env, agent, result_dir)

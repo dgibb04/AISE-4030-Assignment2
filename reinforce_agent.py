@@ -32,8 +32,6 @@ class REINFORCEAgent:
         hidden_sizes: list = None,
         activation: str = "tanh",
         max_grad_norm: float = 0.5,
-        entropy_coef: float = 0.01,
-        entropy_decay: float = 0.9995,
         device: str = "cpu",
     ):
         """
@@ -54,8 +52,6 @@ class REINFORCEAgent:
         self.action_dim = action_dim
         self.gamma = gamma
         self.max_grad_norm = max_grad_norm
-        self.entropy_coef = entropy_coef
-        self.entropy_decay = entropy_decay
         self.device = device
 
         if hidden_sizes is None:
@@ -166,29 +162,20 @@ class REINFORCEAgent:
 
         # Compute value predictions and advantages
         values = self.value(states)
-        advantages = (returns_normalized - values).detach()
+        advantages = returns_normalized - values.detach()
 
         # Recompute log probabilities with current policy (for gradient flow)
         log_probs = self.policy.get_log_prob(states, actions)
 
-        # Compute entropy for exploration bonus
-        entropy = self.policy.get_entropy(states)
-
         # Policy loss: negative expected return (gradient ascent)
         policy_loss = -(log_probs * advantages).mean()
-
-        # Entropy loss: encourages exploration
-        entropy_loss = -entropy.mean()
 
         # Value loss: MSE between predicted and actual returns
         value_loss = ((values - returns_normalized) ** 2).mean()
 
-        # Total policy loss with entropy bonus
-        total_policy_loss = policy_loss + self.entropy_coef * entropy_loss
-
         # Update policy network
         self.policy_optimizer.zero_grad()
-        total_policy_loss.backward()
+        policy_loss.backward()
         torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
         self.policy_optimizer.step()
 
@@ -204,13 +191,9 @@ class REINFORCEAgent:
         self.episode_log_probs = []
         self.episode_rewards = []
 
-        # Decay entropy coefficient
-        self.entropy_coef *= self.entropy_decay
-
         return {
             "policy_loss": policy_loss.item(),
             "value_loss": value_loss.item(),
-            "entropy_loss": entropy_loss.item(),
         }
 
     def save_model(self, path: str):
