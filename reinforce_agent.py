@@ -32,6 +32,8 @@ class REINFORCEAgent:
         hidden_sizes: list = None,
         activation: str = "tanh",
         max_grad_norm: float = 0.5,
+        entropy_coef: float = 0.01,
+        entropy_decay: float = 0.9995,
         device: str = "cpu",
     ):
         """
@@ -52,6 +54,8 @@ class REINFORCEAgent:
         self.action_dim = action_dim
         self.gamma = gamma
         self.max_grad_norm = max_grad_norm
+        self.entropy_coef = entropy_coef
+        self.entropy_decay = entropy_decay
         self.device = device
 
         if hidden_sizes is None:
@@ -82,9 +86,10 @@ class REINFORCEAgent:
             deterministic (bool, optional): If True, return mean action. Defaults to False.
 
         Returns:
-            tuple: (action, log_prob)
+            tuple: (action, log_prob, value)
                 - action (np.ndarray): Action to take, shape (action_dim,).
                 - log_prob (float): Log probability of the action.
+                - value (float): Value estimate V(s) (not used in REINFORCE, for compatibility).
         """
         obs_tensor = torch.tensor(obs, dtype=torch.float32, device=self.device)
 
@@ -94,7 +99,7 @@ class REINFORCEAgent:
         action_np = action.cpu().numpy()
         log_prob_np = log_prob.cpu().item()
 
-        return action_np, log_prob_np
+        return action_np, log_prob_np, None
 
     def store_transition(
         self, obs: np.ndarray, action: np.ndarray, log_prob: float, reward: float
@@ -146,8 +151,8 @@ class REINFORCEAgent:
         states = torch.tensor(
             np.array(self.episode_states), dtype=torch.float32, device=self.device
         )
-        log_probs = torch.tensor(
-            np.array(self.episode_log_probs), dtype=torch.float32, device=self.device
+        actions = torch.tensor(
+            np.array(self.episode_actions), dtype=torch.float32, device=self.device
         )
 
         # Compute discounted returns
@@ -160,20 +165,30 @@ class REINFORCEAgent:
         )
 
         # Compute value predictions and advantages
-        with torch.no_grad():
-            values = self.value(states)
+        values = self.value(states)
+        advantages = (returns_normalized - values).detach()
 
-        advantages = returns_normalized - values.detach()
+        # Recompute log probabilities with current policy (for gradient flow)
+        log_probs = self.policy.get_log_prob(states, actions)
+
+        # Compute entropy for exploration bonus
+        entropy = self.policy.get_entropy(states)
 
         # Policy loss: negative expected return (gradient ascent)
         policy_loss = -(log_probs * advantages).mean()
 
+        # Entropy loss: encourages exploration
+        entropy_loss = -entropy.mean()
+
         # Value loss: MSE between predicted and actual returns
         value_loss = ((values - returns_normalized) ** 2).mean()
 
+        # Total policy loss with entropy bonus
+        total_policy_loss = policy_loss + self.entropy_coef * entropy_loss
+
         # Update policy network
         self.policy_optimizer.zero_grad()
-        policy_loss.backward()
+        total_policy_loss.backward()
         torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
         self.policy_optimizer.step()
 
@@ -189,9 +204,13 @@ class REINFORCEAgent:
         self.episode_log_probs = []
         self.episode_rewards = []
 
+        # Decay entropy coefficient
+        self.entropy_coef *= self.entropy_decay
+
         return {
             "policy_loss": policy_loss.item(),
             "value_loss": value_loss.item(),
+            "entropy_loss": entropy_loss.item(),
         }
 
     def save_model(self, path: str):

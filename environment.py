@@ -9,13 +9,14 @@ import gymnasium as gym
 import numpy as np
 
 
-def create_environment(env_name: str, seed: int = 42) -> tuple:
+def create_environment(env_name: str, seed: int = 42, render_mode: str = None) -> tuple:
     """
     Create and initialize the BipedalWalker environment.
 
     Args:
         env_name (str): Name of the environment (e.g., "BipedalWalker-v3").
         seed (int): Random seed for reproducibility.
+        render_mode (str, optional): Render mode ("human" for display, None for headless).
 
     Returns:
         tuple: (environment, obs_shape, action_shape, action_space)
@@ -24,7 +25,7 @@ def create_environment(env_name: str, seed: int = 42) -> tuple:
             - action_shape (tuple): Shape of action space.
             - action_space: Action space object with bounds.
     """
-    env = gym.make(env_name)
+    env = gym.make(env_name, render_mode=render_mode)
     env.reset(seed=seed)
 
     obs_shape = env.observation_space.shape

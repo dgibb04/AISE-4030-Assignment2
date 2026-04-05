@@ -39,9 +39,9 @@ def load_and_demo(agent_type: str, num_episodes: int = 3, model_path: str = None
         print("CUDA not available, falling back to CPU")
         device = "cpu"
 
-    # Create environment
+    # Create environment with rendering enabled
     env, obs_shape, action_shape, action_space = environment.create_environment(
-        config["environment"]["name"], config["environment"]["seed"]
+        config["environment"]["name"], config["environment"]["seed"], render_mode="human"
     )
     obs_dim = obs_shape[0]
     action_dim = action_shape[0]

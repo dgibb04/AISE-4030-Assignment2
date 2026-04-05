@@ -1,7 +1,7 @@
 # AISE 4030 Assignment 02: Policy Gradient Methods Configuration
 # Select agent type and set hyperparameters
 
-agent_type: "ppo"  # Options: "reinforce", "ppo"
+agent_type: "reinforce"  # Options: "reinforce", "ppo"
 
 environment:
   name: "BipedalWalker-v3"
@@ -18,7 +18,9 @@ shared:
 reinforce:
   policy_lr: 0.0003
   value_lr: 0.001
-  max_episodes: 3000
+  entropy_coef: 0.01
+  entropy_decay: 0.9995
+  max_episodes: 4000
   render: false
   eval_interval: 100
   eval_episodes: 5

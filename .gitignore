@@ -25,28 +25,16 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # Large training artifacts
-# Model weights
-*.pt
-*.pth
+# Checkpoint weights (intermediate saves)
+checkpoint_*.pt
+checkpoint_*.pth
 
-# Training results and history
-*.csv
-*.json
-
-# Plots and images
-*.png
-*.jpg
-*.jpeg
-
-# Results directories (keep structure, ignore contents)
-reinforce_results/*
-ppo_results/*
+# Checkpoints directory
 checkpoints/*
-
-# But keep .gitkeep to maintain directory structure
-!reinforce_results/.gitkeep
-!ppo_results/.gitkeep
 !checkpoints/.gitkeep
+
+# Keep final models, training results, and plots
+# (these are tracked for reproducibility and sharing)
 
 # Conda/pip
 *.egg

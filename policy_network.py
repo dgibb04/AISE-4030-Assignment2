@@ -34,7 +34,7 @@ class GaussianPolicyNetwork(nn.Module):
         action_dim: int,
         hidden_sizes: list = None,
         activation: str = "tanh",
-        log_std_init: float = 0.0,
+        log_std_init: float = 0.5,
     ):
         """
         Initialize the Gaussian policy network.
